@@ -60,16 +60,16 @@ VSX.prototype.connect = function(options) {
 VSX.prototype.query = function() {
     var self = this;
 
-    self.client.write("?P\r"); // query power state
-    self.client.write("?V\r"); // query volume state
-    self.client.write("?ZV\r"); // query volume state
-    self.client.write("?AP\r"); // query power state
-    self.client.write("?M\r"); // query mute state
-    self.client.write("?Z2M\r"); // query mute state
-    self.client.write("?F\r"); // query selected input
+    self.client.write("power?"); // query power state
+    self.client.write("volume?"); // query volume state
+    //self.client.write("?ZV\r"); // query volume state
+    //self.client.write("?AP\r"); // query power state
+    //self.client.write("?M\r"); // query mute state
+    //self.client.write("?Z2M\r"); // query mute state
+    self.client.write("source?"); // query selected input
 
     // get input names
-    var timeout = 100;
+   /* var timeout = 100;
     for (var i in Inputs) {
         var inputId = Inputs[i];
         var getInputName = function(inputId, timeout) {
@@ -80,7 +80,7 @@ VSX.prototype.query = function() {
         getInputName(inputId, timeout);
         timeout += 100;
     }
-}
+} */
 
 /**
  * Turn unit power on or off
@@ -90,15 +90,15 @@ VSX.prototype.power = function(on) {
         console.log("turning power: " + on);
     }
     if (on) {
-        this.client.write("PO\r");
+        this.client.write("power_on!");
     } else {
-        this.client.write("PF\r");
+        this.client.write("power_off!");
     }
 };
 
 /**
- * Turn unit power zone2 on or off
- */
+ * Turn unit power zone2 on or off - not yet implemented
+ 
 VSX.prototype.zpower = function(on) {
     if (TRACE) {
         console.log("turning power: " + on);
@@ -108,7 +108,8 @@ VSX.prototype.zpower = function(on) {
     } else {
         this.client.write("APF\r");
     }
-};
+}; /*
+
 /**
  * Turn mute on or off
  */
@@ -117,14 +118,14 @@ VSX.prototype.mute = function(on) {
         console.log("turning mute: " + on);
     }
     if (on) {
-        this.client.write("MO\r");
+        this.client.write("mute_on!");
     } else {
-        this.client.write("MF\r");
+        this.client.write("mute_off!");
     }
 };
 /**
  * Turn mute on or off zone2
- */
+ 
 VSX.prototype.zmute = function(on) {
     if (TRACE) {
         console.log("turning mute: " + on);
@@ -134,7 +135,7 @@ VSX.prototype.zmute = function(on) {
     } else {
         this.client.write("Z2MF\r");
     }
-};
+}; */
 
 /**
  * 
@@ -191,30 +192,30 @@ VSX.prototype.zvolume = function(db) {
 };
 
 VSX.prototype.volumeUp = function() {
-    this.client.write("VU\r");
+    this.client.write("vol_up!");
 };
 
 VSX.prototype.volumeDown = function() {
-    this.client.write("VD\r");
+    this.client.write("vol_dwn!");
 };
-
+/* Zone 2 not available on Rotel
 VSX.prototype.zvolumeUp = function() {
     this.client.write("ZU\r");
 };
 
 VSX.prototype.zvolumeDown = function() {
     this.client.write("ZD\r");
-};
+};*/
 /**
  * Set the input
- */
+ 
 VSX.prototype.selectInput = function(input) {
     this.client.write(input + "FN\r");
 };
 
 VSX.prototype.selectZInput = function(input) {
     this.client.write(input + "ZS\r");
-};
+}; /*
 /**
  * Query the input name
  */
@@ -296,13 +297,14 @@ function handleConnection(self, socket) {
 function handleData(self, d) {
     var input;
     var data = d.toString(); // make sure it's a string
-    var length = data.lastIndexOf('\r');
+    var length = data.lastIndexOf('!');
     data = data.substr(0, length);
-
+    console.log("handleData called: " + d)
+    console.log("handleData called cleaned: " + data)
     // TODO implement a message to handler mapping instead of this big if-then statement
 
-    if (data.startsWith("PWR")) { // power status
-        var pwr = (data == "PWR0"); // PWR0 = on, PWR1 = off
+    if (data.startsWith("power_on")) { // power status
+        var pwr = (data == "power_on!"); // PWR0 = on, PWR1 = off
         if (TRACE) {
             console.log("got power: " + pwr);
         }
