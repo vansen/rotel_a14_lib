@@ -2,7 +2,7 @@
   "name": "rotel_a14_lib",
   "version": "0.0.1",
   "description": "A library communicating with Rotel Sound devices. Full credits go to stormboy for providing the pioneer version",
-  "main": "rotel_a12_lib.js",
+  "main": "rotel_a14_lib.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
