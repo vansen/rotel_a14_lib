@@ -1,6 +1,7 @@
 /**
- * To control a Pioneer receiver via IP protocol.
- * Tested with VSX-2021
+ * Full credits go to https://github.com/stormboy/node-pioneer-avr 
+ - Code is derived from there.
+ To control a Rotel A14 (and probably above) receiver via IP protocol.
  */
 
 var util = require('util'),
