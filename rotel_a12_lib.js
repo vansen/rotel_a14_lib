@@ -2,6 +2,7 @@
  * Full credits go to https://github.com/stormboy/node-pioneer-avr 
  - Code is derived from there.
  To control a Rotel A14 (and probably above) receiver via IP protocol.
+ Commands available here: https://www.rotel.com/sites/default/files/product/rs232/A12-A14%20Protocol.pdf
  */
 
 var util = require('util'),
