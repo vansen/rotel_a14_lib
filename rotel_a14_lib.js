@@ -8,11 +8,11 @@ var util = require('util'),
 
 var TRACE = true;
 
-var options = {
-    port: 9590,
-    host: "192.168.178.7",
-    log: true
-};
+//var options = {
+//    port: 9590,
+//    host: "192.168.178.7",
+//    log: true
+//};
 
 var VSX = function (options) {
     events.EventEmitter.call(this); // inherit from EventEmitter
@@ -272,11 +272,11 @@ function handleError(self, err) {
     self.emit("error", err);
 }
 
-try {
-    console.log("abc");
+//try {
+//    console.log("abc");
 
-    var receiver = new VSX(options);
-}
-catch (e) {
-    console.log(e);
-}
+//    var receiver = new VSX(options);
+//}
+//catch (e) {
+//    console.log(e);
+//}
