@@ -1,5 +1,13 @@
 'use strict';
 
+createState('rotel.onState'); //Status On/Off
+createState('rotel.inputState'); //Input
+createState('rotel.turnOff');
+createState('rotel.turnOn');
+createState('rotel.volume');
+createState('rotel.powerToggle');
+
+
 // JavaScript source code
 
 var util = require('util'),
@@ -8,11 +16,11 @@ var util = require('util'),
 
 var TRACE = true;
 
-//var options = {
-//    port: 9590,
-//    host: "192.168.178.7",
-//    log: true
-//};
+var options = {
+    port: 9590,
+    host: "192.168.178.7",
+    log: true
+};
 
 var VSX = function (options) {
     events.EventEmitter.call(this); // inherit from EventEmitter
@@ -31,10 +39,11 @@ VSX.prototype.power = function (on) {
     if (TRACE) {
         console.log("turning power: " + on);
     }
+    console.log("My_Power: " + on);
     if (on) {
-        this.client.write("PO\r");
+        this.client.write("power_on!");
     } else {
-        this.client.write("PF\r");
+        this.client.write("power_off!");
     }
 };
 
@@ -48,21 +57,20 @@ VSX.prototype.connect = function (options) {
         handleConnection(self, socket);
     });
 
-      client.on("data", function(data) {
-          handleData(self, data);
-      });
-  
-      client.on("end", function() {
-          handleEnd(self);
-      });
-  
-      client.on("error", function(err) {
-          handleError(self, err);
-      });
+    client.on("data", function (data) {
+        handleData(self, data);
+    });
+
+    client.on("end", function () {
+        handleEnd(self);
+    });
+
+    client.on("error", function (err) {
+        handleError(self, err);
+    });
 
     return client;
 };
-
 
 function handleData(self, d) {
     var input;
@@ -75,40 +83,52 @@ function handleData(self, d) {
         if (TRACE) {
             console.log("Power On: " + pwr);
         }
+        
+        setState('rotel.onState', pwr);
         self.emit("power", pwr);
     }
-    else if (data.startsWith("power=off")) { // power status Zone2
-        var pwr = (data == "power=off!"); // APR0 = on, APR1 = off
+    else if (data.startsWith("power=standby")) { // power status Zone2
+        //pwr = (data == "power=on$"); // APR0 = on, APR1 = off
+        var on =false;
+
         if (TRACE) {
-            console.log("Power Off: " + pwr);
+            console.log("Power on: " + on);
         }
-        self.emit("power", pwr);
+
+        setState('rotel.onState', on);
+        self.emit("power", on);
     }
-    /*
+
     else if (data.startsWith("source=")) { // volume status zone2
-        var input = data.substr(2, 3);
+        var input = data.replace("source=", "").replace("$", "");
 
         // translate to dB.
-        var input = (parseInt(vol) - 81);
+        //input = (parseInt(vol) - 81);
 
         if (TRACE) {
             console.log("got input: " + input);
         }
 
+        setState('rotel.inputState', input);
+        var tst = getState('rotel.inputState');
+        console.log('value read: ' + tst.val);
         self.emit("input", input);
     }
-    else if (data.startsWith("VOL")) { // volume status
-        var vol = data.substr(3, 3);
-
-        // translate to dB.
-        var db = (parseInt(vol) - 161) / 2;
+    
+    else if (data.startsWith("volume=")) { // volume status
+        var vol = data.replace("volume=", "").replace("$", "");
+        console.log("volume level: " + vol);
+        
+        var db = (parseInt(vol));
 
         if (TRACE) {
-            console.log("got volume: " + db + "dB (" + vol + ")");
+            console.log("got volume: " + db);
         }
 
+        setState('rotel.volume', db);
         self.emit("volume", db);
     }
+    /*
     else if (data.startsWith("MUT")) { // mute status
         var mute = data.endsWith("0"); // MUT0 = muted, MUT1 = not muted
         if (TRACE) {
@@ -199,7 +219,11 @@ function handleConnection(self, socket) {
 
     setTimeout(function () {
         self.queryPower();
-        //self.emit("power");
+        self.queryInput();
+        self.queryVolume();
+
+
+        self.emit("power");
     }, 100);
 
     self.socket = socket;
@@ -225,6 +249,18 @@ VSX.prototype.queryPower = function () {
     self.client.write("power?"); // query power state
 }
 
+VSX.prototype.end = function () {
+    var self = this;
+    self.client.end(); // query power state
+    console.log("socket closed.");
+}
+
+VSX.prototype.queryInput = function () {
+    var self = this;
+    self.client.write("source?"); // query power state
+}
+
+/*
 VSX.prototype.query = function () {
     var self = this;
 
@@ -235,7 +271,7 @@ VSX.prototype.query = function () {
     self.client.write("source?"); // query selected input
     self.client.write("/r"); // query power state
 
-    /*
+    
     self.client.write("?AP\r"); // query power state
     self.client.write("?M\r"); // query mute state
     self.client.write("?Z2M\r"); // query mute state
@@ -252,8 +288,50 @@ VSX.prototype.query = function () {
         }
         getInputName(inputId, timeout);
         timeout += 100;
-    }*/
-    
+    }
+
+}*/
+
+/**
+ * Set the input
+ */
+VSX.prototype.selectInput = function (input) {
+    input = input + "!";
+    console.log("setting input to: " + input);
+    this.client.write(input + "!");
+};
+
+/**
+ * Set the input
+ */
+VSX.prototype.selectVolume = function (vol) {
+    var db = parseInt(vol);
+    if (db < 50)
+    {
+        var s  = "vol_" + db + "!";
+        console.log("setting volume to: " + db.toString());
+        this.client.write(s);
+    }
+};
+
+//selectPowerToggle
+VSX.prototype.selectPowerToggle = function (vol) {
+    var s  = "power_toggle!";
+    this.client.write(s);
+};
+
+/**
+ * Query the input name
+ */
+VSX.prototype.queryInputName = function(inputId) {
+    this.client.write("source?");
+}
+
+/**
+ * Query volume level
+ */
+VSX.prototype.queryVolume = function(inputId) {
+    this.client.write("volume?");
 }
 
 function handleEnd(self) {
@@ -272,11 +350,51 @@ function handleError(self, err) {
     self.emit("error", err);
 }
 
-//try {
-//    console.log("abc");
 
-//    var receiver = new VSX(options);
-//}
-//catch (e) {
-//    console.log(e);
-//}
+try {
+    console.log("Starting Rotel Connection");
+
+    var receiver = new VSX(options);
+}
+catch (e) {
+    console.log(e);
+}
+
+on({ id: 'javascript.1.rotel.turnOff', val: true }, function (obj) {
+    console.log("turnOff triggered.")
+    receiver.power(false);
+
+});
+
+on({ id: 'javascript.1.rotel.turnOn', val: true }, function (obj) {
+    console.log("turnOff triggered.")
+    receiver.power(true);
+
+});
+
+//Set Input
+on({ id: 'javascript.1.rotel.inputState', change: "ne" }, function (obj) {
+    var value = obj.state.val;
+    console.log("Input received: " + value);
+    receiver.selectInput(value);
+});
+
+//Set Input
+on({ id: 'javascript.1.rotel.volume', change: "ne" }, function (obj) {
+    var value = obj.state.val;
+    console.log("volume received: " + value);
+    receiver.selectVolume(value);
+});
+
+//
+on({ id: 'javascript.1.rotel.powerToggle'}, function (obj) {
+    var value = obj.state.val;
+    console.log("power toggled: " + value);
+    receiver.selectPowerToggle(value);
+});
+
+onStop(() => { 
+    console.log("closing socket");
+    receiver.end();
+});
+
