@@ -4,4 +4,7 @@ Idea and code derived from https://github.com/stormboy/node-pioneer-avr - full c
 
 Commands available here: https://www.rotel.com/sites/default/files/product/rs232/A12-A14%20Protocol.pdf
 
-This is very early work - contributors welcome...
+Directly copy and paste into iobroker - adjust IP and run the script. Values can be set.
+Input values: Write without trailing "!". This is added in the script.
+Volume is at 50 max. Change script as needed.
+
